@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<!--
+
+		threejs_ex_03_01_models.html
+
+		J. Madeira - March 2021
+
+-->
+
+<head>
+
+	<title>three.js example 04 &mdash; Some Models</title>
+
+	<meta charset="utf-8">
+
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<style>
+		body {
+
+			background-color: #ffffff;
+
+			/* To use the complete page */
+
+			margin: 0px;
+
+			overflow: hidden;
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<!-- The library --- Can be a local version -->
+
+	<script type="text/javascript" src="http://threejs.org/build/three.js"></script>
+
+	<!-- Javascript code that runs the Three.js example -->
+
+	<script type="text/javascript">
+
+		const scene = new THREE.Scene();
+            
+        const objects = []
+
+		function createTree(cylinderRadius, cylinderHeight, coneRadius, coneHeight, treeX, treeZ) {
+
+			// Creating a model by grouping basic geometries
+
+			// Cylinder centered at the origin
+
+			//const cylinderRadius = 2.5;
+
+			//const cylinderHeight = 15;
+
+			const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32);
+
+			const redMaterial = new THREE.MeshLambertMaterial({ color: 0x725c42 });
+
+			const cylinder = new THREE.Mesh(cylinderGeometry, redMaterial);
+
+			// Move base of the cylinder to y = 0
+
+			cylinder.position.y = cylinderHeight / 2.0;
+
+			// Cone
+
+			//const baseConeRadius = 10;
+
+			//const coneHeight = 30;
+
+			const coneGeometry = new THREE.ConeGeometry(coneRadius, coneHeight, 32);
+
+			const greenMaterial = new THREE.MeshPhongMaterial({ color: 0x143306 });
+
+			const cone = new THREE.Mesh(coneGeometry, greenMaterial);
+
+			// Move base of the cone to the top of the cylinder
+
+			cone.position.y = cylinderHeight + coneHeight / 2.0;
+
+			// Tree
+
+			var tree = new THREE.Group();
+
+			tree.add(cylinder);
+
+			tree.add(cone);
+
+			tree.position.set(treeX, 0, treeZ);
+
+			tree.children.forEach(child => {
+				child.castShadow = true;
+				child.receiveShadow = true;
+			});
+
+			return tree;
+		}
+
+		function createForest(x, z, size) {
+			const forest = new THREE.Object3D();
+
+			for (let i=1; i<size+1; i++) {
+				var tree = createTree(5, 15, 10, 30, 0, 0);
+				forest.add(tree);
+				if (i%3==1) {
+					tree.position.x = 40*Math.floor(i/3);
+					tree.position.z = -20;
+				}
+				else if (i%3==2) {
+					tree.position.x = 40*Math.floor(i/3);
+					tree.position.z = 20;
+				}
+				else {
+					tree.position.x = 40*(Math.floor(i/3-1))+20;
+				}
+			}
+
+			forest.position.x = x - (size/3)*20;
+			forest.position.z = z;
+
+			scene.add(forest);
+		}
+
+		function createCar(carSize, carHeight, carWidth, x, z) {
+            //Create car base
+            const baseGeometry = new THREE.BoxGeometry(carSize, carHeight, carWidth);
+            const baseMaterial = new THREE.MeshPhongMaterial( {color: 0xff2800 } );
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = carHeight/3;
+            //Create car glass
+            const glassGeometry = new THREE.BoxGeometry(carSize/2, carHeight/2, carWidth);
+            const glassMaterial = new THREE.MeshPhongMaterial( {color: 0x000000, transparent:true, opacity: 0.8} );
+            const glass = new THREE.Mesh(glassGeometry, glassMaterial);
+            glass.position.y = 5*carHeight/6;
+            //Create car wheels
+            const wheelGeometry = new THREE.TorusGeometry(5, 3, 16, 10 );
+            const wheelMaterial = new THREE.MeshPhongMaterial( {color: 0x000000} );
+            const wheel1 = new THREE.Mesh( wheelGeometry, wheelMaterial );
+            const wheel2 = new THREE.Mesh( wheelGeometry, wheelMaterial );
+            const wheel3 = new THREE.Mesh( wheelGeometry, wheelMaterial );
+            const wheel4 = new THREE.Mesh( wheelGeometry, wheelMaterial );
+            //Create wheel axis
+            const frontAxis = new THREE.Object3D();
+            frontAxis.position.x = carSize/3;
+            objects.push(frontAxis);
+            const backAxis = new THREE.Object3D();
+            backAxis.position.x = -carSize/3;
+            objects.push(backAxis);
+            //Add wheels to axis
+            frontAxis.add(wheel1, wheel2);
+            wheel1.position.z += carWidth/2;
+            wheel2.position.z -= carWidth/2;
+            backAxis.add(wheel3, wheel4);
+            wheel3.position.z += carWidth/2;
+            wheel4.position.z -= carWidth/2;
+            //Create car
+            var car = new THREE.Group();
+
+			car.add(base, glass, frontAxis, backAxis);
+			car.position.set(x, 0, z);
+			//I've found how to cast and receive shadows using a group instead of every single model
+			car.children.forEach(child => {
+				child.castShadow = true;
+				child.receiveShadow = true;
+			});
+			car.position.x = x;
+			car.position.y = 10;
+			car.position.z = z;
+
+			return car;
+        }
+
+		function createRobot(height, width, x, z) {
+				//Create head
+				const headGeometry = new THREE.CircleGeometry();
+				const headMaterial = new THREE.MeshPhongMaterial();
+				const base = new THREE.Mesh(headGeometry, headMaterial);
+				//Create body
+				//Create arms
+				//Create legs
+		}
+
+		// Once everything is loaded, run this function
+
+		function init() {
+			// Create planes
+			var planeGeometry = new THREE.PlaneGeometry(10000, 5000);
+			var planeMaterial = new THREE.MeshPhongMaterial({ color: 0x7CFC00 });
+			var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+			plane.rotation.x = -0.5 * Math.PI;;
+			plane.receiveShadow = true;
+			scene.add(plane);
+
+			planeGeometry = new THREE.PlaneGeometry(10000, 150);
+			var texture = new THREE.TextureLoader().load( 'https://media.istockphoto.com/vectors/horizontal-straight-road-asphalt-repetitive-highway-road-asphalt-vector-id1263743817?k=20&m=1263743817&s=170667a&w=0&h=5VhE42vnFt1VLGCAKG9TOcklKPFsP2BSgPHaMUc7JN8=' );
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set(2, 1);
+			planeMaterial = new THREE.MeshPhongMaterial({ map: texture });
+			plane = new THREE.Mesh(planeGeometry, planeMaterial);
+			plane.position.y = 0.1;
+			plane.rotation.x = -0.5 * Math.PI;;
+			plane.receiveShadow = true;
+			scene.add(plane);
+
+			// Adding models to the scene
+            var car = createCar(50, 15, 25, -250, 50);
+            scene.add(car); 
+
+			var car2 = createCar(50, 15, 25, 250, -25);
+			car2.rotation.y = -Math.PI;
+			scene.add(car2);
+
+			var forest = createForest(0, -100, 100);
+
+			// The CAMERA --- A camera is added to the scene
+
+			// --- Where the viewer is and how he is looking at the scene
+
+			var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 400);
+
+            //camera.position.x = 100;
+			camera.position.y = 50;
+			camera.position.z = 200;
+
+			// Point the camera to the center of the scene
+
+			camera.lookAt(scene.position);
+
+			scene.add(camera);
+
+			const spotLight = new THREE.SpotLight( 0xffffff );
+			spotLight.position.set(0, 150, 150);
+			spotLight.castShadow = true;
+			spotLight.intensity = 2;
+			scene.add(spotLight);
+
+			// The RENDERER --- To display the scene on the Web page
+
+			var renderer = new THREE.WebGLRenderer({ antialias: true });
+
+			renderer.setClearColor(new THREE.Color(0xffffff));
+
+			renderer.setPixelRatio(window.devicePixelRatio);
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			
+			renderer.shadowMap.enabled = true; 
+
+			// Add the output of the renderer
+
+			document.body.appendChild(renderer.domElement);
+
+			const loader = new THREE.TextureLoader();
+			scene.background = loader.load('https://images.unsplash.com/photo-1597200381847-30ec200eeb9a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8Mnx8fGVufDB8fHx8&w=1000&q=80');
+
+			// Render the scene
+			renderer.render(scene, camera);
+
+			var time = 1;
+			// Update model features and render the scene
+			render()
+
+			function render(time) {
+				time *= 0.001;
+
+				objects.forEach(object => {
+					object.rotation.z = -time;
+				});
+
+				car.position.x = -250 + time*25;
+				car2.position.x = 250 - time*15;
+				camera.position.x = -250 + time*25;
+
+				renderer.render(scene, camera);
+
+				requestAnimationFrame(render);
+			}
+		}
+
+		window.onload = init
+
+	</script>
+
+</body>
+
+</html>
