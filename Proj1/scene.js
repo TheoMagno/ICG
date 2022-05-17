@@ -9,6 +9,21 @@ const sceneElements = {
 };
 
 const objects = [];
+const stack_1 = [];
+const stack_2 = [];
+const stack_3 = [];
+const stacks = [stack_1, stack_2, stack_3];
+var numberOfDisks = 0;
+const A = [[0],[]];
+const B = [[1],[]];
+const C = [[2],[]];
+const solution = [];
+var steps = 0;
+var selected = null;
+var simulate = false;
+var tilt = 0;
+var finished = false;
+const colors = [0x0000FF, 0xFF0000];
 
 // Functions are called
 //  1. Initialize the empty scene
@@ -25,9 +40,8 @@ requestAnimationFrame(computeFrame);
 window.addEventListener('resize', resizeWindow);
 
 //To keep track of the keyboard - WASD
-var keyD = false, keyA = false, keyS = false, keyW = false, keyEnter = false, keyEsc;
+var key1 = false, key2 = false, key3 = false, keyEnter = false;
 document.addEventListener('keydown', onDocumentKeyDown, false);
-document.addEventListener('keyup', onDocumentKeyUp, false);
 
 // Update render image size and camera aspect when the window is resized
 function resizeWindow(eventParam) {
@@ -42,52 +56,33 @@ function resizeWindow(eventParam) {
 
 function onDocumentKeyDown(event) {
     switch (event.keyCode) {
-        case 13: //Enter
+        case 13:
             keyEnter = true;
             break;
-        case 27: //Esc
-            keyEsc = true;
+        case 49:
+            key1 = true;
             break;
-        case 68: //d
-            keyD = true;
+        case 50:
+            key2 = true;
             break;
-        case 83: //s
-            keyS = true;
+        case 51:
+            key3 = true;
             break;
-        case 65: //a
-            keyA = true;
+        case 97:
+            key1 = true;
             break;
-        case 87: //w
-            keyW = true;
+        case 98:
+            key2 = true;
             break;
-    }
-}
-function onDocumentKeyUp(event) {
-    switch (event.keyCode) {
-        case 13: //Esc
-            keyEnter = false;
-            break;
-        case 27: //Esc
-            keyEsc = false;
-            break;
-        case 68: //d
-            keyD = false;
-            break;
-        case 83: //s
-            keyS = false;
-            break;
-        case 65: //a
-            keyA = false;
-            break;
-        case 87: //w
-            keyW = false;
+        case 99:
+            key3 = true;
             break;
     }
 }
 
 //////////////////////////////////////////////////////////////////
 
-function createDisk(outerRadius) {
+function createDisk(outerRadius, color) {
     const innerRadius = 1;
     const height = 1;
     
@@ -101,14 +96,16 @@ function createDisk(outerRadius) {
     holePath.absarc(outerRadius, outerRadius, innerRadius, 0, Math.PI * 2, true);
     arcShape.holes.push(holePath);
 
-    var loader = new THREE.TextureLoader();
+    /*var loader = new THREE.TextureLoader();
     loader.setCrossOrigin("");
     var texture1 = loader.load("https://threejs.org/examples/textures/crate.gif");
     texture1.wrapS = texture1.wrapT = THREE.RepeatWrapping;
     texture1.repeat.set(0.05, 0.05);
     var texture2 = loader.load("https://threejs.org/examples/textures/hardwood2_diffuse.jpg");
     texture2.wrapS = texture2.wrapT = THREE.RepeatWrapping;
-    texture2.repeat.set(0.1, 0.1);
+    texture2.repeat.set(0.1, 0.1);    
+      
+    Implementação antiga, seguindo a fonte e usando texturas, troquei as texturas para cores para diferenciar mais facilmente os discos com mesmo tamanho */
 
     var geometry = new THREE.ExtrudeGeometry(arcShape, {
     amount: height,
@@ -118,20 +115,18 @@ function createDisk(outerRadius) {
     });
     geometry.center();
     geometry.rotateX(Math.PI * -.5);
-    var mesh = new THREE.Mesh(geometry, [new THREE.MeshPhongMaterial({
-    map: texture1
-    }), new THREE.MeshPhongMaterial({
-    map: texture2
-    })]);
+    var mesh = new THREE.Mesh(geometry, [new THREE.MeshPhongMaterial({color: colors[color]})]);
    
     return mesh;
 }
 
 function createDisks(numberOfDisks) {
-    for (let i=0; i<numberOfDisks*2; i++) {
-        var disk = createDisk(Math.floor(i/2)+3);
-        disk.position.set(-50, numberOfDisks*2-i + 106.5, 0);
+    for (let i=numberOfDisks*2-1; i>=0; i--) {
+        var disk = createDisk(Math.floor(i/2)+3, i%2);
+        disk.position.set(-50, numberOfDisks*2-i + 107, 0);
         sceneElements.sceneGraph.add(disk);
+        disk.name = "disk_"+i;
+        stack_1.push(disk.name);
     }
 }
 
@@ -208,7 +203,7 @@ function load3DObjects(sceneGraph) {
     // ************************** //
 
     // Ask the user the number of pair of disks
-    let numberOfDisks = prompt("Please enter number of pairs of disks", 0);
+    numberOfDisks = prompt("Please enter number of pairs of disks", 0);
     // Call function to create the disks
     createDisks(numberOfDisks);
 
@@ -220,13 +215,160 @@ function load3DObjects(sceneGraph) {
         }
     
     } );
+
+    for (let i = numberOfDisks; i>0; i--) {
+        A[1].push(i);
+        A[1].push(i);
+    }
+
+    // Ask the user the number of pair of disks
+    let response = prompt("Do you want to play?", "No");
+    if (response=="No") {
+        solve(numberOfDisks*2, A, C, B);
+        simulate=true;
+    }
 }
 
-// Displacement value
-var delta = 0.1;
+function solve(n, source, target, auxiliary) {
+    if (n > 0) {
+        //Move n - 1 disks from source to auxiliary, so they are out of the way
+        solve(n - 1, source, auxiliary, target);
 
-function computeFrame(time) {
-    // Can extract an object from the scene Graph from its name
+        //Move the nth disk from source to target
+        target[1].push(source[1].pop());
+
+        //Display our progress
+        steps += 1;
+        var move = [source[0], target[0]];
+        solution.push(move);
+
+        //Move the n - 1 disks that we left on auxiliary onto target
+        solve(n - 1, auxiliary, target, source);
+    }
+}
+
+
+// Displacement value
+var delta = 1;
+var step = 0;
+
+function computeFrame() {
+    if (step < solution.length && simulate==true) {
+        const move = solution[step];
+        var target_position_x = 50*(move[1]-1);
+        var target_position_y = 108 + stacks[move[1]].length;
+        const disk_name = stacks[move[0]].pop();
+        stacks[move[0]].push(disk_name);
+        const disk = sceneElements.sceneGraph.getObjectByName(disk_name);
+
+        if (disk.position.y<160 && disk.position.x != target_position_x) {
+            disk.position.y += delta;
+        }
+        else if (disk.position.y >= 160 && disk.position.x > target_position_x) {
+            disk.position.x -= delta;
+        }
+        else if (disk.position.y >= 160 && disk.position.x < target_position_x) {
+            disk.position.x += delta;
+        }
+        else if (disk.position.x == target_position_x && disk.position.y > target_position_y) {
+            disk.position.y -= delta;
+        }
+        else if (disk.position.x == target_position_x && disk.position.y == target_position_y) {
+            stacks[move[0]].pop();
+            stacks[move[1]].push(disk_name);
+            step += 1;
+        }
+    }
+
+    if (step==solution.length && simulate==true) {
+        alert("Problem solved with "+step+" moves.");
+        step += 1;
+    }
+
+    else {
+        if (key1) {
+            if (selected == null) {
+                const disk_name = stacks[0].pop();
+                const disk = sceneElements.sceneGraph.getObjectByName(disk_name);
+                selected = disk;
+            }
+            else if (selected.position.y<160) {
+                selected.position.y += delta;
+            }
+            else if (selected.position.y>=160 && selected.position.x==-50) {
+                key1 = false;
+            }
+            else if (selected.position.y>=160 && selected.position.x>-50) {
+                selected.position.x -= delta;
+            }
+            else if (selected.position.y>=160 && selected.position.x<-50) {
+                selected.position.x += delta;
+            }
+        }
+        if (key2) {
+            if (selected == null) {
+                const disk_name = stacks[1].pop();
+                const disk = sceneElements.sceneGraph.getObjectByName(disk_name);
+                selected = disk;
+            }
+            else if (selected.position.y<160) {
+                selected.position.y += delta;
+            }
+            else if (selected.position.y>=160 && selected.position.x==0) {
+                key2 = false;
+            }
+            else if (selected.position.y>=160 && selected.position.x>0) {
+                selected.position.x -= delta;
+            }
+            else if (selected.position.y>=160 && selected.position.x<0) {
+                selected.position.x += delta;
+            }
+        }
+        if (key3) {
+            if (selected == null) {
+                const disk_name = stacks[2].pop();
+                const disk = sceneElements.sceneGraph.getObjectByName(disk_name);
+                selected = disk;
+            }
+            else if (selected.position.y<160) {
+                selected.position.y += delta;
+            }
+            else if (selected.position.y>=160 && selected.position.x==50) {
+                key3 = false;
+            }
+            else if (selected.position.y>=160 && selected.position.x>50) {
+                selected.position.x -= delta;
+            }
+            else if (selected.position.y>=160 && selected.position.x<50) {
+                selected.position.x += delta;
+            }
+        }
+        if (keyEnter) {
+            var stack = stacks[(selected.position.x+50)/50];
+            if (tilt==0 && stack.length > 0 && Math.floor((parseInt(selected.name.substring(5))+2)/2)>Math.floor((parseInt(stack[stack.length-1].substring(5))+2)/2)) {
+                tilt = 4;
+            }
+            else if (tilt != 0) {
+                selected.position.x += tilted[tilt-1];
+                tilt -= 1;
+                if (tilt==0) keyEnter = false;
+            }
+            else if (selected.position.y > 108 + stack.length) {
+                selected.position.y -= delta;
+            }
+            else {
+                stack.push(selected.name);
+                selected = null;
+                keyEnter = false;
+                steps += 1;
+            }
+        }
+        if (stack_3.length==numberOfDisks*2 && finished==false) {
+            alert("Congratulations! You have finished the Double Tower of Hanoi with "+steps+" moves.");
+            steps += 1;
+            finished = true;
+        }
+    }
 
     // Rendering
     helper.render(sceneElements);
@@ -234,6 +376,5 @@ function computeFrame(time) {
     // NEW --- Update control of the camera
     sceneElements.control.update();
 
-    // Call for the next frame
     requestAnimationFrame(computeFrame);
 }
