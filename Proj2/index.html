@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title> Mini Museum with THREE.Js </title>
+    <script type="text/javascript" src="lib/three.js"></script>
+    <script type="text/javascript" src="lib/stats.js"></script>
+    <script type="text/javascript" src="lib/dat.gui.js"></script>
+    <script type="text/javascript" src="lib/chroma.js"></script>
+    <script type="text/javascript" src="lib/FirstPersonControls.js"></script>
+    <script type="text/javascript" src="lib/OBJLoader.js"></script>
+    <script type="text/javascript" src="lib/MTLLoader.js"></script>
+    <script type="text/javascript" src="lib/OBJMTLLoader.js"></script>
+
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Stats-output">
+</div>
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+
+    // once everything is loaded, we run our Three.js stuff.
+    function init() {
+        const MONALISA = "Artist: Leonardo da Vinci\nEstimated date: 1503 to 1519\nWhere to see it: Louvre Museum (Paris)\n\nIt should come as no surprise that the most famous painting in the world is that mysterious woman with the enigmatic smile. But that's one of the few certainties about this work of art.\n\nThe sitter in the painting is thought to be Lisa Gherardini, the wife of Florence merchant Francesco del Giocondo, but experts aren't sure. It did represent an innovation in art -- the painting is the earliest known Italian portrait to focus so closely on the sitter in a half-length portrait, according to the Louvre, where it was first installed in 1804.\n\nDid you know? Before the 20th century, historians say the 'Mona Lisa' was little known outside art circles. But in 1911, an ex-Louvre employee pilfered the portrait and hid it for two years. That theft helped cement the painting's place in popular culture ever since and exposed millions to Renaissance art.";
+        const SUPPER = "Artist: Leonardo da Vinci\nEstimated date: 1495 to 1498\nWhere to see it: Santa Maria delle Grazie (Milan, Italy)\n\nLeonardo, the original 'Renaissance Man,' is the only artist to appear on this list twice.\n\nPainted in an era when religious imagery was still a dominant artistic theme, 'The Last Supper' depicts the last time Jesus broke bread with his disciples before his crucifixion.\n\nThe painting is actually a huge fresco -- 4.6 meters (15 feet) high and 8.8 meters (28.9 feet) wide, which makes for a memorable viewing.\n\nDid you know? The fresco has survived two wartime threats -- Napoleon's troops used the wall of the refectory on which the fresco was painted as target practice. It also was exposed to the air for several years when bombing during World War II destroyed the roof of the Dominican convent of Santa Maria delle Grazie in Milan."
+        const GUERNICA = "Artist: Pablo Picasso\nDate: 1937\nWhere to see it: Museo Reina Sofía (Madrid)\n\nThis is the most recent painting on this list, and it depicts the German aerial bombing of the town of Guernica in the Basque region during the Spanish Civil War.\n\nThe painting has that distinctive Picasso style, and its unflinching examination of the horrors of war made it an essential part of 20th century culture and history.\n\nDid you know? 'Guernica' was moved to the Metropolitan Museum of Modern Art in New York during World War II for safekeeping. Picasso requested that the stay be extended until democracy returned to Spain. It finally went back to Madrid in 1981, six years after the death of longtime Spanish dictator Gen. Francisco Franco.";
+        const NIGHT = "Artist: Vincent van Gogh\nDate: 1889\nWhere to see it: Museum of Modern Art (New York City)\n\nThe comparatively abstract painting is the signature example of van Gogh's innovative and bold use of thick brushstrokes. The painting's striking blues and yellows and the dreamy, swirling atmosphere have intrigued art lovers for decades.\n\nDid you know? Van Gogh was living in an asylum in Saint-Rémy, France, being treated for mental illness, when he painted 'The Starry Night.' He was inspired by the view from the window of his room.";
+        const SCREAM = "Artist: Edvard Munch\nDate: 1893\n\nWhere to see it: National Museum (Oslo, Norway -- opening in 2020) and Munch Museum (Oslo -- through May 2020)\n\nFirst things first -- 'The Scream' is not a single work of art. According to a British Museum's blog, there are two paintings, two pastels and then an unspecified number of prints. The paintings reside in the National Museum and the Munch Museum, and in 2012, one of the pastels sold for almost $120 million at auction.\n\nMuch like the case of 'Mona Lisa', daring thefts (1994 and 2004) of the two painting versions of 'The Scream' helped elevate the public's awareness of the artworks. (Both were eventually found).\n\nDid you know? The androgynous figure in the forefront of the Art Nouveau-style painting isn't producing the scream but rather is trying to block out a piercing shriek coming from nature. It was inspired by an actual experience Munch had while taking in a sunset stroll in Oslo when a dramatic red hue overwhelmed his senses.";
+        const VENUS = "Artist: Sandro Botticelli\nEstimated date: 1485\nWhere to see it: Le Gallerie Degli Uffizi (Florence, Italy)\n\nThe oldest painting in the top 10 and competing with 'The Kiss' for most sensuous, 'The Birth of Venus' was probably commissioned by a member of the wealthy and art-loving Medici family, which ruled Florence and nearby areas for centuries.\n\nMarrying a renewed interest in classic Greek culture with Early Renaissance style, Botticelli creates an unforgettable figure with the Goddess of Love emerging from a huge scallop shell.\n\nDid you know? Botticelli's 'Venus' features two significant departures from most other works of his contemporaries.\n\nFirst, he painted on canvas instead of the more popular wood. Secondly, nudity was rare at this time -- so it was daring that Venus is completely exposed minus her long, flowing hair and a hand (barely) covering her most intimate body parts.";
+        const MENINAS = "Artist: Diego Velázquez\nDate: 1656\nWhere to see it: Museo del Prado (Madrid)\n\nMadrid is the only city in this roundup where you'll find two of the most 10 famous paintings, the first being 'Guernica' at No. 5 and 'Las Meninas' here at No. 9.\n\nHoused at the popular (and vast) Prado, 'Las Meninas' is not only Diego Velázquez`s most famous painting, it's also one of his largest. The complexity of the work has fascinated art critics and the public for centuries.\n\nThe painting does double duty as a portrait. It serves as a group portrait of Spanish royalty, but it's also a self-portrait of Velázquez himself at work (on the left).\n\nDid you know? 'Las Meninas' was commissioned by King Philip IV of Spain, who ruled from 1621 to 1665. It stayed in the royal palace until 1819, when it went to the Prado.";
+        const ABAPORU = "Artist: Tarsila do Amaral\nDate: 1928\nWhere to see it: Private collection of Eduardo Costantini\n\nTarsila described the subject of the painting as 'a monstrous solitary figure, enormous feet, sitting on a green plain, the hand supporting the featherweight minuscule head. In front a cactus exploding in an absurd flower.' This 'monstrous' figure is, in fact, human. An unadorned, undressed, sexless, and ageless human whose anatomy has been distorted. Beginning with a huge foot and hand at the bottom of the picture, the figure slowly shrinks to a tiny head at the top.\n\nThe background of the painting suggests a natural setting. Here, earth is depicted as a simple small green mound upon which the subject sits. The vegetation is represented by a cactus at the right of the figure and a golden sun or flower which crowns the composition. The sky is a plain pale blue background.\n\nThe style of Abaporu can be traced back to the French modernists, specially Fernand Léger, who taught Tarsila in Paris in 1924. However, the closest resemblance of Abaporu can be found in the Spanish Surrealists, Pablo Picasso and Joan Miró, who also painted a figure with an oversized foot in 1924.";
+        const ADAM = "Artist: Michelangelo\nDate: 1508 to 1512\nWhere to see it: Sistine Chapel (Vatican City)\n\nThe most famous work by renowned artist Michelangelo covers a section of the Sistine Chapel's ceiling -- you have to look up to view it. The scene depicts God and Adam with outstretched arms, their fingers nearly touching. It is one of the most replicated images in history.\n\nAdam's muscular form hints at Michelangelo's other talent -- his 'David' is possibly the world's most famous sculpture. You can see the towering marble statue at the Galleria dell'Accademia in Florence.\n\nDid you know? The ceiling of the Sistine Chapel had been dulled by centuries of exposure to candle smoke, among much else. After a long, extensive cleaning that ended in 1989, people were shocked to see the bright, vibrant colors Michelangelo originally used.";
+        const GIRL = "Artist: Johannes Vermeer\nEstimated date: 1665\nWhere to see it: Mauritshuis (The Hague, Netherlands)\n\nThis intriguing favorite often gets compared with the 'Mona Lisa'. Besides the stylistic differences, technically 'Girl With a Pearl Earring' isn't even a portrait, but a 'tronie' -- a Dutch word for a painting of an imaginary figure with exaggerated features.\n\nThe oil on canvas masterpiece is brilliant in its simplicity. The girl -- wearing a blue and gold turban and an oversized pearl earring -- is the entire focus with only a dark backdrop behind her.\n\nDid you know? While the Mauritshuis underwent a renovation from 2012 to 2014, 'Girl With a Pearl Earring' went on tour in the United States, Italy and Japan. It drew huge crowds, further bolstering its status as one of the world's most famous works of art.";
+        const KISS = "Artist: Gustav Klimt\nEstimated date: 1907 to 1908\nWhere to see it: Upper Belvedere museum (Vienna, Austria)\n\nWith No. 6, we move from a study in hate to a study in love with Gustav Klimt's beloved 'The Kiss.'\n\nFrom Klimt's 'Golden Period', Byzantine artistic influences can be seen in the highly decorative robes worn by the passionate, life-sized couple.\n\nThe Upper Belvedere says that with 'The Kiss', Klimt makes a 'general allegorical statement about love being at the heart of human existence.' Given its magnetic appeal, it seems people agree.\n\nDid you know? While 'The Kiss' isn't for sale, other works by Klimt are bought and sold for huge sums. Oprah Winfrey offloaded the 1907 artwork 'Portrait of Adele Bloch-Bauer II' for $150 million in 2016 -- for a cool $60 million profit.";
+
+        var objects = [];
+
+        var clock = new THREE.Clock();
+
+        var stats = initStats();
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        var scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
+
+
+        // create a render and set the size
+        var webGLRenderer = new THREE.WebGLRenderer();
+        webGLRenderer.setClearColor(new THREE.Color(0x000, 1.0));
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        webGLRenderer.shadowMapEnabled = true;
+
+        // position and point the camera to the center of the scene
+        camera.position.x = 100;
+        camera.position.y = 250;
+        camera.position.z = 10;
+        camera.lookAt(new THREE.Vector3(0, 250, 1000));
+
+
+        var camControls = new THREE.FirstPersonControls(camera);
+        camControls.lookSpeed = 0.1;
+        camControls.movementSpeed = 125;
+        camControls.noFly = true;
+        camControls.lookVertical = true;
+        camControls.constrainVertical = false;
+        camControls.verticalMin = 1.0;
+        camControls.verticalMax = 2.0;
+
+
+        var ambientLight = new THREE.AmbientLight('rgb(255,255,255)', 1);
+        scene.add(ambientLight);
+
+        // add spotlight for the shadows
+        var spotLight = new THREE.SpotLight('rgb(255, 255, 255)', 0.5);
+        spotLight.position.set(0, 1000, 0);
+        spotLight.intensity = 0.5;
+        scene.add(spotLight);
+
+
+        //function to create the paintings
+        function createPainting(texture, x, y, xx, zz, rotationY, text, yy= x/2 + (500 - x)/2, rotationX = 0) {
+            var geometry = new THREE.PlaneBufferGeometry(y, x);
+            var material = new THREE.MeshPhongMaterial({ map: texture })
+            var painting = new THREE.Mesh(geometry, material);
+            painting.text = text;
+            painting.position.x = xx;
+            painting.position.y = yy;
+            painting.position.z = zz;
+            painting.rotation.x = rotationX;
+            painting.rotation.y = rotationY;
+            scene.add(painting);
+            objects.push(painting);
+        }
+
+        // create a projector (ray from the camera) for selection
+        var projector = new THREE.Projector();
+
+        // event listeners
+        document.addEventListener('keypress', onDocumentEnterDown, false);
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+
+        // Create and insert in the scene graph the models of the 3D scene
+        function load3DObjects() {
+            // Load textures
+            var floor =  THREE.ImageUtils.loadTexture("assets/textures/floor.jpg");
+            floor.wrapT = floor.wrapS = THREE.RepeatWrapping;
+            floor.repeat.set(5, 5);
+
+            var ceil =  THREE.ImageUtils.loadTexture("assets/textures/ceiling.jpg");
+            ceil.wrapT = ceil.wrapS = THREE.RepeatWrapping;
+            ceil.repeat.set(1, 1);
+
+            var walls =  THREE.ImageUtils.loadTexture("assets/textures/wall.jpg");
+            walls.wrapT = walls.wrapS = THREE.RepeatWrapping;
+            walls.repeat.set(1, 1);
+
+            var monalisa = THREE.ImageUtils.loadTexture("assets/paintings/monalisa.jpg");
+            var guernica = THREE.ImageUtils.loadTexture("assets/paintings/guernica.jpg");
+            var venus = THREE.ImageUtils.loadTexture("assets/paintings/the_birth_of_venus.jpg");
+            var supper = THREE.ImageUtils.loadTexture("assets/paintings/the_last_supper.jpg");
+            var scream = THREE.ImageUtils.loadTexture("assets/paintings/the_scream.jpg");
+            var night = THREE.ImageUtils.loadTexture("assets/paintings/the_starry_night.jpg");
+            var abaporu = THREE.ImageUtils.loadTexture("assets/paintings/abaporu.jpg");
+            var meninas = THREE.ImageUtils.loadTexture("assets/paintings/las_meninas.jpg");
+            var adam = THREE.ImageUtils.loadTexture("assets/paintings/the_creation_of_adam.jpg");
+            var girl = THREE.ImageUtils.loadTexture("assets/paintings/the_girl_with_the_pearl_earring.jpg");
+            var kiss = THREE.ImageUtils.loadTexture("assets/paintings/the_kiss.jpg");
+
+            // ************************** //
+            // Create ground
+            // ************************** //
+            var groundGeometry = new THREE.PlaneBufferGeometry(2000, 2000);
+            var groundMaterial = new THREE.MeshPhongMaterial(({ map: floor }));
+            var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI/2;
+            scene.add(ground);
+
+            // ************************** //
+            // Create walls
+            // ************************** //
+            var wallGeometry = new THREE.PlaneBufferGeometry(2000, 500);
+            var wallMaterial = new THREE.MeshPhongMaterial({ map: walls });
+            var wall1 = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall1.position.y = 250;
+            wall1.position.z = -1000;
+            var wall2 = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall2.position.y = 250;
+            wall2.position.z = 1000;
+            wall2.rotation.y = -Math.PI;
+            var wall3 = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall3.position.y = 250;
+            wall3.position.x = 1000;
+            wall3.rotation.y = -Math.PI/2;
+            var wall4 = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall4.position.y = 250;
+            wall4.position.x = -1000;
+            wall4.rotation.y = Math.PI/2;
+            scene.add(wall1);
+            scene.add(wall2);
+            scene.add(wall3);
+            scene.add(wall4);
+
+            // ************************** //
+            // Create ceiling
+            // ************************** //
+            var ceilingGeometry = new THREE.PlaneBufferGeometry(2000, 2000);
+            var ceilingMaterial = new THREE.MeshPhongMaterial({ map: ceil });
+            var ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+            ceiling.rotation.x = Math.PI/2;
+            ceiling.position.y = 500;
+            scene.add(ceiling);
+
+            // ************************** //
+            // Create paintings
+            // ************************** //
+            var mon = createPainting(monalisa, 77, 53, -999, 375, Math.PI/2, MONALISA);
+            var gue = createPainting(guernica, 349, 777, 0, 999, Math.PI, GUERNICA);
+            var nig = createPainting(night, 74, 92, -999, -375, Math.PI/2, NIGHT);
+            var sup = createPainting(supper, 460, 880, 0, -999, 0, SUPPER);
+            var scr = createPainting(scream, 91, 73.5, -999, -250, Math.PI/2, SCREAM);
+            var ven = createPainting(venus, 172, 278, -999, 0, Math.PI/2, VENUS);
+            var men = createPainting(meninas, 318, 276, 999, 500, -Math.PI/2, MENINAS);
+            var aba = createPainting(abaporu, 85, 73, -999, 250, Math.PI/2, ABAPORU);
+            var ada = createPainting(adam, 280, 570, 999, 0, -Math.PI/2, ADAM);
+            var gir = createPainting(girl, 44, 39, -999, 0, Math.PI/2, GIRL, 375);
+            var kis = createPainting(kiss, 180, 180, 999, -500, -Math.PI/2, KISS);
+
+            // ************************** //
+            // Import sculptures
+            // ************************** //
+            var objLoader = new THREE.OBJLoader();
+            objLoader.load(
+                'assets/sculptures/venus.obj',
+                function ( object ) {
+                    object.scale.x = object.scale.y = object.scale.z = .2;
+                    object.position.x = -900;
+                    object.position.z = -900;
+                    object.rotation.y = Math.PI/4;
+                    object.text = "";
+                    scene.add( object );
+                    objects.push(object);
+                },
+                function ( xhr ) {
+                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                },
+                function ( error ) {
+                    console.log( 'An error happened' );
+                }
+            );
+
+            objLoader.load(
+                'assets/sculptures/Rodin_Thinker.obj',
+                function ( object ) {
+                    object.scale.x = object.scale.y = object.scale.z = 200;
+                    object.position.x = 900;
+                    object.position.z = -900;
+                    object.rotation.y = Math.PI/4;
+                    object.text = "";
+                    scene.add( object );
+                    objects.push(object);
+                },
+                function ( xhr ) {
+                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                },
+                function ( error ) {
+                    console.log( 'An error happened' );
+                }
+            );
+
+            var objMtlLoader = new THREE.OBJMTLLoader();
+            objMtlLoader.load(
+                'assets/sculptures/pieta.obj',
+                'assets/sculptures/pieta.mtl',
+                function ( object ) {
+                    object.scale.x = object.scale.y = object.scale.z = 20;
+                    object.position.x = 900;
+                    object.position.z = 900;
+                    object.rotation.y = 3*Math.PI/4;
+                    object.text = "";
+                    scene.add( object );
+                    objects.push(object);
+                },
+                function ( xhr ) {
+                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                },
+                function ( error ) {
+                    console.log( 'An error happened' );
+                }
+            );
+
+            objMtlLoader.load(
+                'assets/sculptures/herkules.obj',
+                'assets/sculptures/herkules.mtl',
+                function ( object ) {
+                    object.scale.x = object.scale.y = object.scale.z = 50;
+                    object.position.x = -900;
+                    object.position.y = -50;
+                    object.position.z = 900;
+                    object.rotation.y = 3*Math.PI/4;
+                    object.text = "";
+                    scene.add( object );
+                    objects.push(object);
+                },
+                function ( xhr ) {
+                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                },
+                function ( error ) {
+                    console.log( 'An error happened' );
+                }
+            );
+        }
+
+        // add the output of the renderer to the html element
+        document.getElementById("WebGL-output").appendChild(webGLRenderer.domElement);
+
+        load3DObjects();
+
+        // call the render function
+        var step = 0;
+
+
+        // setup the control gui
+        var controls = new function () {
+            this.showRay = false;
+        };
+
+        var gui = new dat.GUI();
+        gui.add(controls, 'showRay').onChange(function (e) {
+                if (tube) scene.remove(tube)
+            });
+        var mesh;
+
+
+        function setCamControls() {
+
+        }
+
+        render();
+
+        function render() {
+            stats.update();
+            var delta = clock.getDelta();
+
+            if (camera.position.y != 250) {
+                camera.position.y = 250;
+            }
+            if (camera.position.x > 900) {
+                camera.position.x = 900;
+            }
+            if (camera.position.x < -900) {
+                camera.position.x = -900;
+            }
+            if (camera.position.z > 900) {
+                camera.position.z = 900;
+            }
+            if (camera.position.z < -900) {
+                camera.position.z = -900;
+            }
+
+
+            camControls.update(delta);
+            webGLRenderer.clear();
+            // render using requestAnimationFrame
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera)
+        }
+
+        function initStats() {
+
+            var stats = new Stats();
+            stats.setMode(0); // 0: fps, 1: ms
+
+            // Align top-left
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+
+            document.getElementById("Stats-output").appendChild(stats.domElement);
+
+            return stats;
+        }
+
+        var projector = new THREE.Projector();
+        var tube;
+
+        function onDocumentEnterDown(event) {
+            if (event.key == "Enter") {
+                // direction from the camera
+                var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+                vector = vector.unproject(camera);
+                // ray casting
+                var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize(), 0.5, 500);
+
+                // intersected objects
+                var intersects = raycaster.intersectObjects(objects);
+
+                if (intersects.length > 0) {
+                    alert(intersects[0].object.text);
+                    }   
+                }
+            }
+        
+        function onDocumentMouseMove(event) {
+            if (controls.showRay) {
+                // draw the ray from the camera
+                var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+                vector = vector.unproject(camera);
+
+                var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+                var intersects = raycaster.intersectObjects(objects);
+
+                if (intersects.length > 0) {
+                    var points = [];
+                    points.push(new THREE.Vector3(-30, 39.8, 30));
+                    points.push(intersects[0].point);
+
+                    var mat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.6 });
+                    var tubeGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(points), 60, 0.001);
+
+                    if (tube) scene.remove(tube);
+
+                    if (controls.showRay) {
+                        tube = new THREE.Mesh(tubeGeometry, mat);
+                        scene.add(tube);
+                    }
+                }
+            }
+        }
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
